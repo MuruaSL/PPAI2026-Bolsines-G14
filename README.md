@@ -38,6 +38,17 @@ Bolsín          Creado → Cerrado (precinto) → Enviado → Recibido en CM de
 | E2 · Diseño | Patrón GoF + implementación funcionando + defensa oral | En curso |
 | UX | MoodBoard, Mapa de Empatía, User Journey sobre una Persona del EB | En paralelo |
 
+### Qué está implementado
+
+- **Flujo principal completo** del CU 28, mensajes 1 a 66: opción 1, el contenido del bolsín
+  es igual al registrado.
+- **Flujo alternativo A6**: el EB no confirma la registración.
+- 16 pruebas automatizadas.
+
+**Falta**: los flujos alternativos A3, A4 y A5 (documentación faltante, documentación que no
+corresponde al destino, documentación para redirigir). Se implementan junto con el patrón de
+diseño de la Entrega 2, todavía sin asignar por el docente tutor.
+
 ## Regla que gobierna la implementación
 
 **El código debe ser un calco del modelado.** Tienen que existir las clases del diagrama, el gestor,
@@ -58,9 +69,86 @@ implementar algo, manda el diagrama, no la conveniencia del código.
 3. Persistencia a base de datos.
 4. Tecnología web. Python o Java (lenguajes con soporte de la cátedra).
 
+## Cómo correrlo
+
+Hace falta Python 3.10 o superior. El entorno virtual y la base de datos no están en el
+repositorio, así que cada uno los crea en su máquina.
+
+**1. Clonar y entrar a la carpeta**
+
+```bash
+git clone https://github.com/MuruaSL/PPAI2026-Bolsines-G14.git
+cd PPAI2026-Bolsines-G14
+```
+
+**2. Crear el entorno virtual e instalar Django**
+
+En macOS o Linux:
+
+```bash
+python3 -m venv .venv
+./.venv/bin/pip install -r requirements.txt
+```
+
+En Windows:
+
+```bash
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+```
+
+**3. Crear la base de datos y cargar el escenario de prueba**
+
+```bash
+./.venv/bin/python manage.py migrate
+./.venv/bin/python manage.py cargardatos
+```
+
+En Windows, reemplazar `./.venv/bin/python` por `.venv\Scripts\python` en este paso y en los
+siguientes.
+
+**4. Levantar el servidor**
+
+```bash
+./.venv/bin/python manage.py runserver
+```
+
+Abrir http://localhost:8000
+
+**Correr las pruebas**
+
+```bash
+./.venv/bin/python manage.py test recepcion
+```
+
+### El escenario de prueba
+
+`cargardatos` deja cargado un Encargado de Bolsines de la Comisión Médica Córdoba y cuatro
+bolsines, elegidos para que se vea que el filtrado funciona:
+
+| Bolsín | Precinto | ¿Debe listarse? | Por qué |
+|---|---|---|---|
+| 1001 | PRE-88231 | Sí | Enviado a Córdoba, con 2 remitos y 3 documentaciones |
+| 1002 | PRE-88245 | Sí | Enviado a Córdoba, con 1 remito |
+| 1003 | PRE-90001 | No | Su destino es Rosario, no la CM del usuario |
+| 1004 | PRE-90002 | No | Su destino es Córdoba pero está Cerrado, no Enviado |
+
+Una vez que se registra la recepción de un bolsín, deja de aparecer en el listado: ya no está
+en estado Enviado. Para volver al punto de partida, correr `cargardatos` de nuevo.
+
 ## Estructura
 
 ```
+config/                         configuración del proyecto Django
+recepcion/
+  models.py                     las entidades del diagrama de clases
+  gestor.py                     GestorRegRecepBolsin, la clase control
+  pantalla.py                   PantallaRegRecepBolsin, el boundary
+  views.py, urls.py             la mitad web del boundary
+  templates/recepcion/          las pantallas
+  tests.py                      pruebas del CU 28
+  management/commands/
+    cargardatos.py              escenario de prueba
 docs/
   cu28-contrato-secuencia.md    contrato de los 66 mensajes
   diagramas/                    modelo de dominio y diagramas de la E1
