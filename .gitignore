@@ -1,0 +1,22 @@
+.DS_Store
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.sqlite3
+.env
+
+# Java
+target/
+build/
+*.class
+*.jar
+
+# Editores
+.idea/
+.vscode/
+*.swp
