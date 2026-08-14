@@ -93,10 +93,15 @@ documentación para redirigir) **no están modeladas todavía**. Ver [Pendientes
 | 22 | Gestor | Pantalla | `mostrarDatosBolsin()` |
 | 23 | Gestor | Pantalla | `habilitarSeleccionBolsin()` |
 | 24 | EB | Pantalla | `tomarSeleccionBolsin()` |
-| 25 | Pantalla | Gestor | `tomarSeleccionbolsin()` |
+| 25 | Pantalla | Gestor | `tomarSeleccionBolsin()` |
 
-> Ojo con el `b` minúscula en `tomarSeleccionbolsin()` del mensaje 25: en el modelo la Pantalla
-> expone `tomarSeleccionBolsin()` y el Gestor `tomarSeleccionbolsin()`. Está así en ambos diagramas.
+> **Corrección acordada.** En los diagramas de la E1 la Pantalla expone `tomarSeleccionBolsin()` y
+> el Gestor `tomarSeleccionbolsin()`, con `b` minúscula. Es un typo, no una distinción intencional.
+> Se unifica a `tomarSeleccionBolsin()` en ambos lados.
+>
+> **Pendiente:** aplicar esta corrección en los diagramas fuente antes de la Entrega 2, para que el
+> modelo y el código sigan coincidiendo. El diagrama manda; acá el código no diverge, se adelanta a
+> una corrección que hay que hacer en el modelo.
 
 ### Remitos y documentación del bolsín seleccionado
 
