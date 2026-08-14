@@ -1,0 +1,128 @@
+{% extends "recepcion/base.html" %}
+
+{% block contenido %}
+
+  {# msg 10 — mostrarCM() #}
+  <div class="panel">
+    <h2>Comisión médica</h2>
+    <div class="cm">{{ cmUsuario }}</div>
+  </div>
+
+  {% if sinBolsines %}
+    {# A1/A2 — no hay bolsines enviados para esta CM #}
+    <div class="panel">
+      <div class="aviso">
+        No hay bolsines en estado <strong>Enviado</strong> dirigidos a esta comisión médica.
+      </div>
+    </div>
+  {% else %}
+
+    {# msg 22 y 23 — mostrarDatosBolsin() y habilitarSeleccionBolsin() #}
+    <div class="panel">
+      <h2>Bolsines a recibir</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Bolsín</th>
+            <th>CM origen</th>
+            <th>Nro. precinto</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for bolsin in bolsines %}
+            <tr {% if bolsinSeleccionado and bolsin.id == bolsinSeleccionado.id %}class="seleccionada"{% endif %}>
+              <td>{{ bolsin.numeroBolsin }}</td>
+              <td>{{ bolsin.cmOrigen }}</td>
+              <td>{{ bolsin.nroPrecinto }}</td>
+              <td>
+                {% if bolsinSeleccionado and bolsin.id == bolsinSeleccionado.id %}
+                  <span class="tenue">Seleccionado</span>
+                {% else %}
+                  <form method="post" action="{% url 'seleccionarBolsin' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="bolsinId" value="{{ bolsin.id }}">
+                    <button type="submit">Seleccionar</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {# msg 34 — mostrarDatosRemitoYDocAsociada() #}
+    {% if datosRemitos %}
+      <div class="panel">
+        <h2>Contenido registrado del bolsín {{ bolsinSeleccionado.numeroBolsin }}</h2>
+        {% for remito in datosRemitos %}
+          <div class="remito">
+            <h3>Remito N° {{ remito.numero }}</h3>
+            <table>
+              <thead>
+                <tr><th>Asunto</th><th>Tipo de documentación</th></tr>
+              </thead>
+              <tbody>
+                {% for doc in remito.documentacion %}
+                  <tr><td>{{ doc.asunto }}</td><td>{{ doc.tipo }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {# msg 36 — mostrarOptsRecBolsin() #}
+    {% if opciones and not pideConfirmacion %}
+      <div class="panel">
+        <h2>Situación de la recepción</h2>
+        <p class="tenue">
+          Controlá el contenido físico del bolsín contra lo registrado y seleccioná la opción
+          que corresponda.
+        </p>
+        {% for valor, etiqueta in opciones %}
+          <form method="post" action="{% url 'seleccionarOpcion' %}">
+            {% csrf_token %}
+            <input type="hidden" name="bolsinId" value="{{ bolsinSeleccionado.id }}">
+            <input type="hidden" name="opcion" value="{{ valor }}">
+            <button type="submit" class="opcion">
+              <span class="n">{{ valor }}</span>{{ etiqueta }}
+            </button>
+          </form>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {# msg 40 — pedirConfirmacionSeleccionParaRegCorresp() #}
+    {% if pideConfirmacion %}
+      <div class="panel">
+        <h2>Confirmar registración</h2>
+        <p>
+          Se registrará la recepción del bolsín
+          <strong>{{ bolsinSeleccionado.numeroBolsin }}</strong>
+          con la situación: <strong>{{ etiquetaOpcion }}</strong>
+        </p>
+        <div class="acciones">
+          <form method="post" action="{% url 'confirmar' %}">
+            {% csrf_token %}
+            <input type="hidden" name="bolsinId" value="{{ bolsinSeleccionado.id }}">
+            <input type="hidden" name="opcion" value="{{ opcionSeleccionada }}">
+            <input type="hidden" name="confirmacion" value="si">
+            <button type="submit" class="primario">Confirmar</button>
+          </form>
+          <form method="post" action="{% url 'confirmar' %}">
+            {% csrf_token %}
+            <input type="hidden" name="bolsinId" value="{{ bolsinSeleccionado.id }}">
+            <input type="hidden" name="opcion" value="{{ opcionSeleccionada }}">
+            <input type="hidden" name="confirmacion" value="no">
+            <button type="submit">No confirmar</button>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+  {% endif %}
+
+{% endblock %}

@@ -132,3 +132,93 @@ class CU28RegistrarRecepcionBolsinTest(TestCase):
         self.assertEqual(bolsin.getEstadoActual().nombre, 'Enviado')
         self.assertEqual(bolsin.cambioEstado.count(), 1)
         self.assertFalse(self.pantalla.responsableInformado)
+
+
+class CU28InterfazWebTest(TestCase):
+    """Recorre el CU 28 por HTTP, como lo haría el EB en el navegador."""
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command('cargardatos', verbosity=0)
+
+    def test_pantalla_inicial_muestra_cm_y_bolsines(self):
+        respuesta = self.client.get('/')
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Comisión Médica Córdoba')
+        self.assertContains(respuesta, '1001')
+        self.assertContains(respuesta, 'PRE-88231')
+        self.assertContains(respuesta, '1002')
+        # 1003 es de otro destino y 1004 no está enviado: no deben listarse.
+        self.assertNotContains(respuesta, 'PRE-90001')
+        self.assertNotContains(respuesta, 'PRE-90002')
+
+    def test_seleccionar_bolsin_muestra_remitos_y_opciones(self):
+        bolsin = Bolsin.objects.get(numeroBolsin=1001)
+
+        respuesta = self.client.post('/seleccionar-bolsin/', {'bolsinId': bolsin.id})
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Remito N° 501')
+        self.assertContains(respuesta, 'Remito N° 502')
+        self.assertContains(respuesta, 'Expediente laboral 4471')
+        self.assertContains(respuesta, 'Radiografías caso 89')
+        self.assertContains(respuesta, 'El contenido del bolsín es igual al registrado')
+
+    def test_seleccionar_opcion_pide_confirmacion(self):
+        bolsin = Bolsin.objects.get(numeroBolsin=1001)
+
+        respuesta = self.client.post('/seleccionar-opcion/',
+                                     {'bolsinId': bolsin.id, 'opcion': 1})
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Confirmar registración')
+        self.assertContains(respuesta, 'El contenido del bolsín es igual al registrado')
+
+    def test_confirmar_registra_y_muestra_los_estados(self):
+        bolsin = Bolsin.objects.get(numeroBolsin=1001)
+
+        respuesta = self.client.post('/confirmar/', {
+            'bolsinId': bolsin.id, 'opcion': 1, 'confirmacion': 'si',
+        })
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Recepción registrada')
+        self.assertContains(respuesta, 'RecibidoEnCMDestino')
+        self.assertContains(respuesta, 'RecibidoYAceptado')
+        self.assertContains(respuesta, 'RecibidaYAceptada')
+        self.assertContains(respuesta, 'Murua')
+
+        bolsin.refresh_from_db()
+        self.assertEqual(bolsin.getEstadoActual().nombre, 'RecibidoEnCMDestino')
+
+    def test_no_confirmar_no_registra(self):
+        bolsin = Bolsin.objects.get(numeroBolsin=1001)
+
+        respuesta = self.client.post('/confirmar/', {
+            'bolsinId': bolsin.id, 'opcion': 1, 'confirmacion': 'no',
+        })
+
+        self.assertContains(respuesta, 'No se confirmó la registración')
+        bolsin.refresh_from_db()
+        self.assertEqual(bolsin.getEstadoActual().nombre, 'Enviado')
+
+    def test_recorrido_completo_paso_a_paso(self):
+        """El recorrido entero, como en la defensa."""
+        bolsin = Bolsin.objects.get(numeroBolsin=1002)
+
+        self.assertContains(self.client.get('/'), '1002')
+        self.assertContains(
+            self.client.post('/seleccionar-bolsin/', {'bolsinId': bolsin.id}),
+            'Remito N° 503')
+        self.assertContains(
+            self.client.post('/seleccionar-opcion/', {'bolsinId': bolsin.id, 'opcion': 1}),
+            'Confirmar registración')
+        self.assertContains(
+            self.client.post('/confirmar/',
+                             {'bolsinId': bolsin.id, 'opcion': 1, 'confirmacion': 'si'}),
+            'Recepción registrada')
+
+        bolsin.refresh_from_db()
+        self.assertEqual(bolsin.getEstadoActual().nombre, 'RecibidoEnCMDestino')
+        self.assertEqual(Remito.objects.get(numero=503).estado.nombre, 'RecibidoYAceptado')

@@ -1,0 +1,58 @@
+{% extends "recepcion/base.html" %}
+
+{% block contenido %}
+
+  {% if confirmado %}
+    {# msg 65 — informarResponsable() #}
+    <div class="panel">
+      <div class="exito">
+        <strong>Recepción registrada.</strong>
+        Bolsín {{ bolsin.numeroBolsin }}, precinto {{ bolsin.numeroPrecinto }}.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Estados actualizados</h2>
+      <table>
+        <tbody>
+          <tr>
+            <td>Bolsín {{ bolsin.numeroBolsin }}</td>
+            <td><strong>{{ estadoBolsin.nombre }}</strong></td>
+          </tr>
+          {% for remito in remitos %}
+            <tr>
+              <td>Remito N° {{ remito.numero }}</td>
+              <td><strong>{{ remito.estado.nombre }}</strong></td>
+            </tr>
+            {% for detalle in remito.detalleRemito.all %}
+              <tr>
+                <td class="tenue">&nbsp;&nbsp;&nbsp;&nbsp;{{ detalle.documentacion.asunto }}</td>
+                <td class="tenue">{{ detalle.documentacion.getEstadoActual.nombre }}</td>
+              </tr>
+            {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Responsable</h2>
+      <p>{{ responsable }}</p>
+      <p class="tenue">
+        Se incluyó el CU 29 Notificar recepción de bolsín para avisar a la comisión médica
+        de origen.
+      </p>
+    </div>
+
+  {% else %}
+    {# A6 — el EB no confirma #}
+    <div class="panel">
+      <div class="aviso">
+        No se confirmó la registración. El bolsín {{ bolsin.numeroBolsin }} queda como estaba.
+      </div>
+    </div>
+  {% endif %}
+
+  <a class="volver" href="{% url 'registrarRecepcion' %}">← Registrar otra recepción</a>
+
+{% endblock %}
