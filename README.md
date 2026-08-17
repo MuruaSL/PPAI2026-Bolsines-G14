@@ -49,6 +49,9 @@ Bolsín          Creado → Cerrado (precinto) → Enviado → Recibido en CM de
 corresponde al destino, documentación para redirigir). Se implementan junto con el patrón de
 diseño de la Entrega 2, todavía sin asignar por el docente tutor.
 
+El backlog completo, con lo detectado que hay que decidir, está en
+[`docs/pendientes.md`](docs/pendientes.md).
+
 ## Regla que gobierna la implementación
 
 **El código debe ser un calco del modelado.** Tienen que existir las clases del diagrama, el gestor,
@@ -151,6 +154,7 @@ recepcion/
     cargardatos.py              escenario de prueba
 docs/
   cu28-contrato-secuencia.md    contrato de los 66 mensajes
+  pendientes.md                 backlog de lo que falta decidir
   diagramas/                    modelo de dominio y diagramas de la E1
 ```
 
