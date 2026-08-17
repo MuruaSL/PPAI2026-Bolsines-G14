@@ -1,0 +1,80 @@
+{% extends "recepcion/base.html" %}
+
+{% comment %}
+  Pantalla auxiliar, fuera del alcance del CU 28. No está modelada en los diagramas
+  de la Entrega 1. Hace visible la regla de negocio de trazabilidad del ERS.
+{% endcomment %}
+
+{% block contenido %}
+
+  <div class="panel">
+    <h2>Historial de recepciones — {{ cmUsuario }}</h2>
+    <p class="tenue">
+      Bolsines ya recibidos en esta comisión médica, con el estado en que quedó cada remito
+      y cada documentación, la fecha y hora del registro y el empleado responsable.
+    </p>
+    <p class="tenue"><em>Consulta auxiliar: no forma parte del CU 28.</em></p>
+  </div>
+
+  {% if not recibidos %}
+    <div class="panel">
+      <div class="aviso">
+        Todavía no se registró la recepción de ningún bolsín en esta comisión médica.
+      </div>
+    </div>
+  {% endif %}
+
+  {% for recibido in recibidos %}
+    <div class="panel">
+      <h2>Bolsín {{ recibido.bolsin.numeroBolsin }} — precinto {{ recibido.bolsin.numeroPrecinto }}</h2>
+
+      <table>
+        <tbody>
+          <tr>
+            <td style="width: 34%">CM origen</td>
+            <td>{{ recibido.bolsin.origen.nombre }}</td>
+          </tr>
+          <tr>
+            <td>Estado del bolsín</td>
+            <td><strong>{{ recibido.estado.nombre }}</strong></td>
+          </tr>
+          <tr>
+            <td>Fecha y hora de recepción</td>
+            <td>{{ recibido.fechaHora|date:"d/m/Y H:i" }}</td>
+          </tr>
+          <tr>
+            <td>Empleado responsable</td>
+            <td>{{ recibido.responsable }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {% for remito in recibido.remitos %}
+        <div class="remito" style="margin-top: 14px">
+          <h3>Remito N° {{ remito.numero }} — {{ remito.estado.nombre }}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Asunto</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for documentacion in remito.documentaciones %}
+                <tr>
+                  <td>{{ documentacion.asunto }}</td>
+                  <td>{{ documentacion.tipo }}</td>
+                  <td>{{ documentacion.estado.nombre }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  <a class="volver" href="{% url 'registrarRecepcion' %}">← Registrar recepción de bolsín</a>
+
+{% endblock %}

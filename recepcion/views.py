@@ -113,3 +113,64 @@ def confirmar(request):
         'responsable': pantalla.gestor.empleadoLogueado,
         'informado': pantalla.responsableInformado,
     })
+
+
+# ---------------------------------------------------------------------------
+# Consulta auxiliar — FUERA DEL ALCANCE DEL CU 28
+# ---------------------------------------------------------------------------
+#
+# Esta vista no forma parte del caso de uso asignado ni está modelada en los
+# diagramas de la Entrega 1. Es una ayuda de consulta que hace visible la regla
+# de negocio "Trazabilidad de la documentación y del Bolsín" del ERS: en qué
+# estado quedó cada bolsín recibido, cuándo y qué empleado fue responsable.
+#
+# Deliberadamente NO tiene gestor ni clase boundary: inventarlos sería agregar
+# modelado que la cátedra no validó. Consulta las entidades y muestra el
+# resultado, nada más.
+
+
+def historial(request):
+    """Bolsines ya recibidos en la CM del usuario, con su trazabilidad."""
+    sesion = Sesion.objects.order_by('-fechaHoraInicio').first()
+    if sesion is None:
+        return render(request, 'recepcion/sin_datos.html')
+
+    empleado = sesion.getUsuarioEnSesion().empleados.first()
+    comisionMedica = empleado.asignadoA if empleado else None
+
+    recibidos = []
+    for bolsin in Bolsin.objects.filter(destino=comisionMedica).order_by('-numeroBolsin'):
+        estadoActual = bolsin.getEstadoActual()
+        if estadoActual is None or estadoActual.nombre != 'RecibidoEnCMDestino':
+            continue
+
+        cambioEstado = bolsin.cambioEstado.filter(fechaHoraFin__isnull=True).first()
+
+        remitos = []
+        for remito in bolsin.remito.all():
+            documentaciones = []
+            for detalle in remito.detalleRemito.all():
+                documentacion = detalle.getDocumentacion()
+                documentaciones.append({
+                    'asunto': documentacion.getAsunto(),
+                    'tipo': documentacion.getTipoDocumentacion().getNombre(),
+                    'estado': documentacion.getEstadoActual(),
+                })
+            remitos.append({
+                'numero': remito.getNumero(),
+                'estado': remito.estado,
+                'documentaciones': documentaciones,
+            })
+
+        recibidos.append({
+            'bolsin': bolsin,
+            'estado': estadoActual,
+            'fechaHora': cambioEstado.fechaHoraInicio if cambioEstado else None,
+            'responsable': cambioEstado.responsableCE if cambioEstado else None,
+            'remitos': remitos,
+        })
+
+    return render(request, 'recepcion/historial.html', {
+        'cmUsuario': comisionMedica.getNombre() if comisionMedica else '',
+        'recibidos': recibidos,
+    })

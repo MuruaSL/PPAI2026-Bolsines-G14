@@ -54,5 +54,9 @@
   {% endif %}
 
   <a class="volver" href="{% url 'registrarRecepcion' %}">← Registrar otra recepción</a>
+  {% if confirmado %}
+    &nbsp;&nbsp;·&nbsp;&nbsp;
+    <a class="volver" href="{% url 'historial' %}">Ver historial de recepciones</a>
+  {% endif %}
 
 {% endblock %}

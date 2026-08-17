@@ -29,9 +29,24 @@
       background: var(--acento);
       color: #fff;
       padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
     }
     header h1 { margin: 0; font-size: 17px; font-weight: 600; }
     header p { margin: 3px 0 0; font-size: 13px; opacity: .85; }
+    header nav { display: flex; gap: 6px; }
+    header nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, .35);
+    }
+    header nav a:hover { background: rgba(255, 255, 255, .16); }
     main { max-width: 940px; margin: 0 auto; padding: 26px 20px 60px; }
     .panel {
       background: var(--panel);
@@ -112,8 +127,14 @@
 </head>
 <body>
   <header>
-    <h1>Sistema Bolsines</h1>
-    <p>CU 28 — Registrar recepción de bolsín</p>
+    <div>
+      <h1>Sistema Bolsines</h1>
+      <p>CU 28 — Registrar recepción de bolsín</p>
+    </div>
+    <nav>
+      <a href="{% url 'registrarRecepcion' %}">Registrar recepción</a>
+      <a href="{% url 'historial' %}">Historial</a>
+    </nav>
   </header>
   <main>
     {% block contenido %}{% endblock %}

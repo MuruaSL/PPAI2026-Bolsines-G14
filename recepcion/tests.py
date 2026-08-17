@@ -222,3 +222,48 @@ class CU28InterfazWebTest(TestCase):
         bolsin.refresh_from_db()
         self.assertEqual(bolsin.getEstadoActual().nombre, 'RecibidoEnCMDestino')
         self.assertEqual(Remito.objects.get(numero=503).estado.nombre, 'RecibidoYAceptado')
+
+
+class HistorialTest(TestCase):
+    """Pantalla auxiliar de historial. No es parte del CU 28."""
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command('cargardatos', verbosity=0)
+
+    def test_sin_recepciones_avisa_que_esta_vacio(self):
+        respuesta = self.client.get('/historial/')
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Todavía no se registró la recepción')
+
+    def test_muestra_el_bolsin_recibido_con_su_trazabilidad(self):
+        bolsin = Bolsin.objects.get(numeroBolsin=1001)
+        self.client.post('/confirmar/',
+                         {'bolsinId': bolsin.id, 'opcion': 1, 'confirmacion': 'si'})
+
+        respuesta = self.client.get('/historial/')
+
+        self.assertContains(respuesta, '1001')
+        self.assertContains(respuesta, 'PRE-88231')
+        self.assertContains(respuesta, 'RecibidoEnCMDestino')
+        self.assertContains(respuesta, 'Remito N° 501')
+        self.assertContains(respuesta, 'RecibidoYAceptado')
+        self.assertContains(respuesta, 'Expediente laboral 4471')
+        self.assertContains(respuesta, 'RecibidaYAceptada')
+        self.assertContains(respuesta, 'Murua')
+
+    def test_no_muestra_bolsines_que_siguen_enviados(self):
+        bolsin = Bolsin.objects.get(numeroBolsin=1001)
+        self.client.post('/confirmar/',
+                         {'bolsinId': bolsin.id, 'opcion': 1, 'confirmacion': 'si'})
+
+        respuesta = self.client.get('/historial/')
+
+        # 1002 sigue en Enviado, no debe aparecer en el historial.
+        self.assertNotContains(respuesta, 'PRE-88245')
+
+    def test_no_muestra_bolsines_de_otra_cm(self):
+        respuesta = self.client.get('/historial/')
+
+        self.assertNotContains(respuesta, 'PRE-90001')
